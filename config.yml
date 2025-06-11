@@ -1,0 +1,50 @@
+cameras:
+  - id: garten
+    type: pull
+    url: 'http://192.168.0.86/capture'
+    kuma:
+      push_url: 'http://192.168.0.100:3001/api/push/4x81KPhhfX'
+      failure_threshold: 3
+    storage:
+      - type: video_snippet
+        root: './data'
+        batch_size: 150
+        fps: 30
+        crf: 18
+        preset: fast
+    postprocessors:
+      - type: rotate
+        degrees: 180
+        expand: true
+      - type: datetime_stamp
+        fmt: '%Y-%m-%d %H:%M:%S'
+        position: [10, 10]
+        color: '#FF0000'
+        font_size: 25
+    triggers:
+      - type: interval
+        seconds: 2
+        start_time: '05:00'
+        end_time: '23:00'
+
+  - id: garten-daily
+    type: pull
+    url: 'http://192.168.0.86/capture'
+    kuma:
+      push_url: 'http://192.168.0.100:3001/api/push/4x81KPhhfX'
+      failure_threshold: 1
+    storage:
+      - type: single_image
+        root: './data'
+    postprocessors:
+      - type: rotate
+        degrees: 180
+        expand: true
+      - type: datetime_stamp
+        fmt: '%Y-%m-%d %H:%M:%S'
+        position: [10, 10]
+        color: '#FF0000'
+        font_size: 25
+    triggers:
+      - type: cron
+        hour:   '14'

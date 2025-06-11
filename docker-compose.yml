@@ -1,0 +1,10 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  esp-cam-server:
+    build: .
+    restart: unless-stopped
+    volumes:
+      - ./config.yml:/app/config.yml:ro
+      - ./data:/app/data

@@ -1,0 +1,7 @@
+# requirements.txt
+pydantic
+PyYAML
+apscheduler
+requests
+Pillow
+pytz
