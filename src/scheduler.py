@@ -25,8 +25,8 @@ def setup_scheduler(workers: List[CameraWorker]) -> BackgroundScheduler:
             if isinstance(trig, IntervalTriggerConfig):
                 sec = trig.seconds
                 if trig.start_time and trig.end_time:
-                    sh = int(trig.start_time.split(':')[0])
-                    eh = int(trig.end_time.split(':')[0])
+                    sh, sm = map(int, trig.start_time.split(':'))
+                    eh, em = map(int, trig.end_time.split(':'))
                     ranges = []
                     if sh < eh:
                         ranges.append(f'{sh}-{eh-1}')
@@ -37,20 +37,36 @@ def setup_scheduler(workers: List[CameraWorker]) -> BackgroundScheduler:
                     for hr in ranges:
                         cron = CronTrigger(second=f'*/{sec}', minute='*', hour=hr)
                         scheduler.add_job(worker.job, cron, id=job_base + f'_{hr}')
+                    scheduler.add_job(
+                        worker.flush,
+                        CronTrigger(hour=str(eh), minute=str(em), second='0'),
+                        id=f'{job_base}_end_flush',
+                    )
                 else:
                     scheduler.add_job(worker.job, 'interval', seconds=sec, id=job_base)
-            else:  # CronTriggerConfig
+            else:
                 cron_args = {
-                    k: v
-                    for k, v in trig.dict().items()
+                    k: v for k, v in trig.dict().items()
                     if k != 'type' and v is not None
                 }
                 cron = CronTrigger(**cron_args)
                 scheduler.add_job(worker.job, cron, id=job_base)
 
-        # nightly flush at 00:00
         flush_cron = CronTrigger(hour='0', minute='0', second='0')
         scheduler.add_job(worker.flush, flush_cron, id=f'{worker.id}_flush')
+
+        if worker.notifier:
+            interval_sec = next(
+                (t.seconds for t in worker.triggers
+                 if isinstance(t, IntervalTriggerConfig)),
+                60,
+            )
+            scheduler.add_job(
+                worker.heartbeat,
+                'interval',
+                seconds=interval_sec,
+                id=f'{worker.id}_heartbeat',
+            )
 
     scheduler.start()
     return scheduler

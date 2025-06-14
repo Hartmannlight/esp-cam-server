@@ -56,8 +56,8 @@ PostProcessorConfig = Union[
 class IntervalTriggerConfig(BaseModel):
     type: Literal['interval']
     seconds: int = Field(..., gt=0)
-    start_time: Optional[str]
-    end_time: Optional[str]
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
 
     @validator('start_time', 'end_time', pre=True)
     def validate_time_format(cls, value):

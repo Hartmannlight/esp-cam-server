@@ -18,8 +18,7 @@ class CameraWorker:
         self.post_processors = build_postprocessors(cfg)
         self.notifier = (
             KumaNotifier(cfg.kuma.push_url, cfg.kuma.failure_threshold)
-            if cfg.kuma
-            else None
+            if cfg.kuma else None
         )
         self.triggers = cfg.triggers
 
@@ -59,3 +58,13 @@ class CameraWorker:
         for storage in self.storages:
             if isinstance(storage, VideoSnippetStorage):
                 storage.flush(self.id)
+
+    def heartbeat(self):
+        try:
+            response = self.session.get(self.url, timeout=5)
+            response.raise_for_status()
+            if self.notifier:
+                self.notifier.success()
+        except Exception as e:
+            if self.notifier:
+                self.notifier.failure(str(e))

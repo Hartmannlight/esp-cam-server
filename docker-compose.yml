@@ -1,9 +1,8 @@
-# docker-compose.yml
 version: '3.8'
 
 services:
   esp-cam-server:
-    build: .
+    image: ghcr.io/hartmannlight/esp-cam-server:latest
     restart: unless-stopped
     volumes:
       - ./config.yml:/app/config.yml:ro
